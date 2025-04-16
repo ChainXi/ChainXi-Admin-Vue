@@ -1,0 +1,38 @@
+name: QuickStart
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+      inputs:
+        environment:
+          description: "Select deployment environment"
+          required: true
+          default: "dev"
+          type: choice
+          options:
+            - dev
+            - stg
+ 
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        environment:
+          name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'dev' }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22.14.0"
+            - run: npm install
+            - run: npm run build
+            - name: TranslateFile
+              uses: wangyucode/sftp-upload-action@v2.0.4
+              with:
+                  host: ${{ secrets.SERVER_HOST }}
+                  port: ${{ secrets.SERVER_SSH_PORT }}
+                  username: ${{ secrets.SERVER_USERNAME }}
+                  privateKey: ${{ secrets.SERVER_PEM_KEY }}
+                  localDir: "dist"
+                  remoteDir: ${{ secrets.NGINX_REMOTEDIR }}
+                  removeExtraFilesOnServer: true
