@@ -1,0 +1,38 @@
+{
+  "include": [
+    "**.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "src/**/*.d.ts",
+    "shims-vuex.d.ts",
+    "uno.config.ts",
+    "vite-plugin/svg-icon"
+  ],
+  "compilerOptions": {
+    "target": "ESNext",
+    "jsx": "preserve",
+    "jsxImportSource": "vue",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "types": [
+      "vite/client",
+      "element-plus/global"
+    ],
+    "module": "ESNext",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+  ]
+}
