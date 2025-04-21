@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@iconify/json": "^2.2.204",
-    "@intlify/unplugin-vue-i18n": "^1.2.0",
+    "@intlify/unplugin-vue-i18n": "^6.0.8",
     "@zxcvbn-ts/core": "^3.0.4",
     "ali-oss": "^0.0.0",
     "animate.css": "^4.1.1",
