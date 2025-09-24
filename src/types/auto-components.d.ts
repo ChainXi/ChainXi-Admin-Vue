@@ -16,6 +16,7 @@ declare module 'vue' {
     CropperAvatar: typeof import('./../components/Cropper/src/CropperAvatar.vue')['default']
     Dialog: typeof import('./../components/Dialog/src/Dialog.vue')['default']
     DictTag: typeof import('./../components/DictTag/src/DictTag.vue')['default']
+    DynamicBg: typeof import('./../components/DynamicBg/src/DynamicBg.vue')['default']
     Echart: typeof import('./../components/Echart/src/Echart.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBacktop: typeof import('element-plus/es')['ElBacktop']

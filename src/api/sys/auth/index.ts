@@ -1,5 +1,8 @@
 import http from '@/utils/request'
 
+export const ping = (): Promise<ResponseResult> => {
+  return http.get('/sys/auth/ping')
+}
 export const authorize = (redirect: string, clientId: string): Promise<ResponseResult<string>> => {
   return http.get('/sys/auth/authorize', { clientId, redirect })
 }
@@ -68,7 +71,6 @@ export type TokenType = {
   userId: number // 用户编号
   userType: number //用户类型
   clientId: string //客户端编号
-  expiresTime: number //过期时间
 }
 
 export type AuthVo = {
