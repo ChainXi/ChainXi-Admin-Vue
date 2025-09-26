@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Backtop: typeof import('./../components/Backtop/src/Backtop.vue')['default']
+    Biz: typeof import('./../components/Biz/Biz.vue')['default']
     ConfigGlobal: typeof import('./../components/ConfigGlobal/src/ConfigGlobal.vue')['default']
     ContentWrap: typeof import('./../components/ContentWrap/src/ContentWrap.vue')['default']
     CopperModal: typeof import('./../components/Cropper/src/CopperModal.vue')['default']
