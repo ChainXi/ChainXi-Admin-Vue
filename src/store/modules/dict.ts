@@ -5,6 +5,7 @@ import { CACHE_KEY, useCache } from '@/hooks/useCache'
 import { listSimpleDictData } from '@/api/sys/dict/dict.data'
 
 const wsCache = useCache('sessionStorage')
+let dictInitPromise: Promise<void> | null = null
 export interface DictValueType {
   value: any
   label: string
@@ -39,26 +40,28 @@ export const useDictStore = defineStore('dict', {
   },
   actions: {
     async setDictMap() {
-      const dictMap = wsCache.get(CACHE_KEY.DICT_CACHE)
-      if (dictMap) {
-        if (dictMap.size === 0) {
-          console.debug('cache dictMap.length===0')
-        } else {
-          this.dictMap = dictMap
-          this.isSetDict = true
+      if (this.isSetDict) return
+      if (dictInitPromise) return dictInitPromise
+
+      dictInitPromise = (async () => {
+        const dictMap = wsCache.get(CACHE_KEY.DICT_CACHE)
+        if (dictMap) {
+          if (dictMap.size === 0) {
+            console.debug('cache dictMap.length===0')
+          } else {
+            this.dictMap = dictMap
+            this.isSetDict = true
+          }
+          return
         }
-      } else {
         const res = await listSimpleDictData()
-        // 设置数据
-        const dictDataMap = {}
+        const dictDataMap: Record<string, any[]> = {}
         res.data.forEach((dictData: DictDataSimpleRespVo) => {
-          // 获得 dictType 层级
-          var enumValueObj = dictDataMap[dictData.dictType]
+          let enumValueObj = dictDataMap[dictData.dictType]
           if (!enumValueObj) {
             enumValueObj = []
             dictDataMap[dictData.dictType] = enumValueObj
           }
-          // 处理 dictValue 层级
           enumValueObj.push({
             value: dictData.value,
             label: dictData.label,
@@ -72,12 +75,15 @@ export const useDictStore = defineStore('dict', {
           console.debug('net dictDataMap.length===0')
         }
         wsCache.set(CACHE_KEY.DICT_CACHE, dictDataMap, { exp: 60 }) // 60 秒 过期
+      })()
+      try {
+        await dictInitPromise
+      } finally {
+        dictInitPromise = null
       }
     },
     getDictByType(type: string) {
-      if (!this.isSetDict) {
-        this.setDictMap()
-      }
+      if (!this.isSetDict) this.setDictMap()
       return this.dictMap[type]
     }
   }
