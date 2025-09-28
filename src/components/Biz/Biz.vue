@@ -28,6 +28,8 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+// 使用已安装的 busuanzi.pure.js 模块，而不是远程 script
+let busuanziModule: any = null
 
 const uvLoading = ref(true)
 const pvLoading = ref(true)
@@ -93,45 +95,39 @@ const setupObservers = () => {
 }
 
 const refreshBusuanzi = () => {
-  const w = window as any
-  if (w.Busuanzi && typeof w.Busuanzi.fetch === 'function') {
+  if (busuanziModule && typeof busuanziModule.fetch === 'function') {
     try {
-      w.Busuanzi.fetch()
-      // restart loading indicators until new numbers arrive
       uvLoading.value = true
       pvLoading.value = true
-      setTimeout(markLoadedIfReady, 300)
-      setTimeout(markLoadedIfReady, 1000)
-      setTimeout(markLoadedIfReady, 2000)
+      busuanziModule.fetch()
+      setTimeout(markLoadedIfReady, 200)
+      setTimeout(markLoadedIfReady, 800)
+      setTimeout(markLoadedIfReady, 1600)
     } catch {}
   }
 }
 
-const injectScript = () => {
-  if (document.getElementById('busuanzi-script')) {
+const importBusuanzi = async () => {
+  if (busuanziLoaded) return refreshBusuanzi()
+  try {
+    // 动态导入，避免在 SSR 或构建阶段报错
+    busuanziModule = await import('busuanzi.pure.js')
+    // 部分版本默认导出或挂载到 window，做兼容
+    const w: any = window as any
+    if (!w.Busuanzi && busuanziModule) {
+      // 常见包导出： { fetch: f } 或 default:{ fetch }
+      w.Busuanzi = busuanziModule.default || busuanziModule
+    }
     busuanziLoaded = true
     refreshBusuanzi()
-    return
-  }
-  const s = document.createElement('script')
-  s.id = 'busuanzi-script'
-  s.async = true
-  // official recommended CDN domain
-  s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
-  s.onload = () => {
-    busuanziLoaded = true
-    refreshBusuanzi()
-  }
-  s.onerror = () => {
+  } catch (e) {
     uvLoading.value = false
     pvLoading.value = false
   }
-  document.head.appendChild(s)
 }
 
 onMounted(() => {
-  injectScript()
-  // delay a tick to ensure DOM nodes exist before attaching observers
+  importBusuanzi()
   setTimeout(setupObservers, 0)
 })
 

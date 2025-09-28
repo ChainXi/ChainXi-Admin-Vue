@@ -6,6 +6,10 @@ declare global {
 
   interface Window {
     SITE_CONFIG: any
+    Busuanzi?: {
+      fetch: () => void
+      // 其他属性不蒜子暂未用到，可按需扩展
+    }
   }
 
   type Nullable<T> = T | null
