@@ -1,31 +1,143 @@
 <template>
-  <div class="badges">
-    <span class="badge">
+  <div class="badges" aria-label="Site traffic statistics">
+    <!-- UV Badge -->
+    <span class="badge" aria-live="polite" title="Unique Visitors (Site UV)">
       <span class="t">UV</span>
       <span class="v">
-        <span id="busuanzi_site_uv"><span class="loading-dots"><span></span><span></span><span></span></span></span>
-        <span id="busuanzi_value_site_uv" style="display:none"></span>
+        <!-- Container per busuanzi spec: hidden automatically on error/timeout -->
+        <span id="busuanzi_container_site_uv" style="display:none">
+          <span id="busuanzi_value_site_uv"></span>
+        </span>
+        <!-- Fallback loading animation while value not yet injected -->
+        <span v-if="uvLoading" class="loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>
       </span>
     </span>
-    <span class="badge">
+    <!-- PV Badge -->
+    <span class="badge" aria-live="polite" title="Page Views (Site PV)">
       <span class="t">PV</span>
       <span class="v">
-        <span id="busuanzi_site_pv"><span class="loading-dots"><span></span><span></span><span></span></span></span>
-        <span id="busuanzi_value_site_pv" style="display:none"></span>
+        <span id="busuanzi_container_site_pv" style="display:none">
+          <span id="busuanzi_value_site_pv"></span>
+        </span>
+        <span v-if="pvLoading" class="loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>
       </span>
     </span>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+
+const uvLoading = ref(true)
+const pvLoading = ref(true)
+const route = useRoute()
+let busuanziLoaded = false
+
+const markLoadedIfReady = () => {
+  // When busuanzi fills values, the inner spans get textContent; poll briefly.
+  const uvSpan = document.getElementById('busuanzi_value_site_uv')
+  const pvSpan = document.getElementById('busuanzi_value_site_pv')
+  if (uvSpan && uvSpan.textContent) uvLoading.value = false
+  if (pvSpan && pvSpan.textContent) pvLoading.value = false
+}
+
+// Observe changes to value spans so we don't rely only on polling timing.
+const setupObservers = () => {
+  const uvSpan = document.getElementById('busuanzi_value_site_uv')
+  const pvSpan = document.getElementById('busuanzi_value_site_pv')
+  const uvContainer = document.getElementById('busuanzi_container_site_uv')
+  const pvContainer = document.getElementById('busuanzi_container_site_pv')
+
+  const handle = (type: 'uv'|'pv') => {
+    if (type === 'uv') uvLoading.value = false
+    else pvLoading.value = false
+  }
+
+  const makeObserver = (el: HTMLElement | null, type: 'uv'|'pv') => {
+    if (!el) return
+    // If already has content, mark immediately.
+    if (el.textContent && el.textContent.trim() !== '') handle(type)
+    const obs = new MutationObserver(() => {
+      if (el.textContent && el.textContent.trim() !== '') {
+        handle(type)
+        obs.disconnect()
+      }
+    })
+    obs.observe(el, { childList: true, characterData: true, subtree: true })
+  }
+
+  makeObserver(uvSpan as HTMLElement | null, 'uv')
+  makeObserver(pvSpan as HTMLElement | null, 'pv')
+
+  // Also watch container display changes (busuanzi sets display inline-block to show)
+  const watchDisplay = (container: HTMLElement | null, type: 'uv'|'pv') => {
+    if (!container) return
+    const obs = new MutationObserver(() => {
+      const style = (container as HTMLElement).style.display
+      if (style && style !== 'none') {
+        handle(type)
+        obs.disconnect()
+      }
+    })
+    obs.observe(container, { attributes: true, attributeFilter: ['style'] })
+  }
+  watchDisplay(uvContainer as HTMLElement | null, 'uv')
+  watchDisplay(pvContainer as HTMLElement | null, 'pv')
+
+  // Fallback safety: ensure after 6s we stop loading even若脚本超时
+  setTimeout(() => {
+    if (uvLoading.value) uvLoading.value = false
+    if (pvLoading.value) pvLoading.value = false
+  }, 6000)
+}
+
 const refreshBusuanzi = () => {
   const w = window as any
   if (w.Busuanzi && typeof w.Busuanzi.fetch === 'function') {
-    try { w.Busuanzi.fetch() } catch {}
+    try {
+      w.Busuanzi.fetch()
+      // restart loading indicators until new numbers arrive
+      uvLoading.value = true
+      pvLoading.value = true
+      setTimeout(markLoadedIfReady, 300)
+      setTimeout(markLoadedIfReady, 1000)
+      setTimeout(markLoadedIfReady, 2000)
+    } catch {}
   }
 }
-onMounted(() => {
+
+const injectScript = () => {
   if (document.getElementById('busuanzi-script')) {
+    busuanziLoaded = true
+    refreshBusuanzi()
+    return
+  }
+  const s = document.createElement('script')
+  s.id = 'busuanzi-script'
+  s.async = true
+  // official recommended CDN domain
+  s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
+  s.onload = () => {
+    busuanziLoaded = true
+    refreshBusuanzi()
+  }
+  s.onerror = () => {
+    uvLoading.value = false
+    pvLoading.value = false
+  }
+  document.head.appendChild(s)
+}
+
+onMounted(() => {
+  injectScript()
+  // delay a tick to ensure DOM nodes exist before attaching observers
+  setTimeout(setupObservers, 0)
+})
+
+// Refresh counts when route path changes (exclude hash only changes)
+watch(() => route.fullPath, (to, from) => {
+  if (busuanziLoaded && to !== from) {
     refreshBusuanzi()
   }
 })

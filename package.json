@@ -17,6 +17,7 @@
     "ali-oss": "^0.0.0",
     "animate.css": "^4.1.1",
     "axios": "^1.8.4",
+    "busuanzi.pure.js": "^1.0.3",
     "clipboard": "^2.0.11",
     "cropperjs": "^1.6.1",
     "echarts": "^5.4.3",

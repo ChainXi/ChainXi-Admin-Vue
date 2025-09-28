@@ -79,7 +79,7 @@ export function generateRoutes(menuList: AppCustomRouteRecordRaw[] = [], routes:
     }
     routes.push(route)
   }
-  routes.sort((a, b) => (a.meta.sort - b.meta.sort ? 0 : (a.id as any) - (b.id as any)))
+  routes.sort((a, b) => (a.meta.sort - b.meta.sort || (a.id as any) - (b.id as any)))
   console.log(modulesRoutesKeys)
   console.log(menuList)
   console.log(routes)
