@@ -38,8 +38,18 @@
     <el-table v-loading="viewModel.queryLoading" :data="viewModel.dataList">
       <tag-controller ref="columnControllerRef">
         <el-table-column :label="$t('cacheManager.cacheName')" align="center" prop="name" width="200" />
-        <el-table-column :label="$t('cacheManager.localExpireTime')" align="center" prop="localExpireTime" width="200" />
-        <el-table-column :label="$t('cacheManager.remoteExpireTime')" align="center" prop="remoteExpireTime" width="200" />
+        <el-table-column :label="$t('cacheManager.expireTimes')" align="left" width="280">
+          <template #default="scope">
+            <el-space wrap>
+              <el-tag
+                v-for="(et, idx) in scope.row.expireTimes"
+                :key="idx"
+                type="info"
+                disable-transitions
+              >{{ formatExpire(et) }}</el-tag>
+            </el-space>
+          </template>
+        </el-table-column>
         <el-table-column :label="$t('common.remark')" align="center" prop="remark" />
         <el-table-column :label="$t('common.action')" align="center">
           <template #default="scope" width="150">
@@ -68,6 +78,7 @@
 
 <script lang="ts" setup>
 import * as CacheInfonApi from '@/api/sys/cache'
+import { StorageCacheEnum } from '@/api/sys/cache'
 import useViewModule from '@/hooks/view-module'
 import type { TagSwitch } from '@/types/table'
 import SysCacheFormSave from './form.vue'
@@ -109,4 +120,10 @@ const openForm = (name: number) => {
 viewModel.dataForm = reactive({
   name: null
 })
+
+const formatExpire = (et: CacheInfonApi.CacheExpireTime) => {
+  if (!et) return ''
+  const name = et.storageCache === StorageCacheEnum.CAFFEINE ? 'CAFFEINE' : 'REDIS'
+  return `${name}:${et.expireTime}s`
+}
 </script>

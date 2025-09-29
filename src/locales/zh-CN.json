@@ -304,7 +304,13 @@
   "cacheManager": {
     "cacheName": "缓存名",
     "localExpireTime": "时效[本地]",
-    "remoteExpireTime": "时效[远端]"
+    "remoteExpireTime": "时效[远端]",
+    "expireTimes": "过期配置",
+    "storageCache": "存储介质",
+    "storageCacheLocal": "本地(CAFFEINE)",
+    "storageCacheRemote": "远端(REDIS)",
+    "expireTime": "过期秒数",
+    "addExpireTime": "新增过期配置"
   },
   "redisManager": {
     "baseInfo": "基本信息",

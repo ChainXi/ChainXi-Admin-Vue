@@ -26,7 +26,13 @@
   "cacheManager": {
     "cacheName": "Cache name",
     "localExpireTime": "Timeliness [local]",
-    "remoteExpireTime": "Timeliness [remote]"
+    "remoteExpireTime": "Timeliness [remote]",
+    "expireTimes": "Expire settings",
+    "storageCache": "Storage",
+    "storageCacheLocal": "Local (CAFFEINE)",
+    "storageCacheRemote": "Remote (REDIS)",
+    "expireTime": "Expire seconds",
+    "addExpireTime": "Add expire setting"
   },
   "common": {
     "action": "operate",
